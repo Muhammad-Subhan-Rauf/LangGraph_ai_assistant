@@ -8,7 +8,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.graph import Graph, END
 
 # Configure Gemini API Key
-llm = ChatGoogleGenerativeAI(model="gemini-pro", google_api_key="AIzaSyDvbke4TODM1nOMbkZAXXhOVGQeECSsATU")
+llm = ChatGoogleGenerativeAI(model="gemini-pro", google_api_key="")
 
 # Define State
 class AgentState:
