@@ -10,7 +10,7 @@ from commands import ubuntu_commands
 
 present_path = "/"
 # Configure Gemini API Key
-llm = ChatGoogleGenerativeAI(model="gemini-pro", google_api_key="AIzaSyDvbke4TODM1nOMbkZAXXhOVGQeECSsATU")
+llm = ChatGoogleGenerativeAI(model="gemini-pro", google_api_key="AIzaSyDvbke4TODM1nOMbkZAXXhOVGQeECSsATU", temperature=0)
 
 # Define State
 class AgentState:
@@ -71,7 +71,7 @@ def interpret_command(state: AgentState) -> AgentState:
         input_variables=["input"],
         template="""
         Convert the following user request into a shell command, or reply 'Unsupported Command' if it cannot be executed. Do NOT use any command 
-        that changes the PWD, and when executing multiple commands at once, instead use relative paths and dont forget the tilde (~):
+        that changes the PWD, and when executing multiple commands at once, Always use absolute paths and dont use CD and dont forget the tilde (~):
         User Request: {input}
         Shell Command:
         """
@@ -147,6 +147,7 @@ def execute_command(state: AgentState) -> AgentState:
         print(f"Executing Command: {shell_command}")
 
         # Split by ';' and strip spaces around each command
+        commands = [shell_command]
         if ";" in shell_command:
             commands = [cmd.strip() for cmd in shell_command.split(";") if cmd.strip()]
         if "&&" in shell_command:
@@ -176,7 +177,7 @@ def execute_command(state: AgentState) -> AgentState:
                 print(error_msg)
                 all_results.append(error_msg)
             else:
-                output = result.stdout.strip()
+                output = result
                 print(f"Sub-Command Output:\n{output}")
                 all_results.append(output)
         
