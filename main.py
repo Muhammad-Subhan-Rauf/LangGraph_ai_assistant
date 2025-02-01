@@ -10,7 +10,7 @@ from commands import ubuntu_commands
 
 present_path = "/"
 # Configure Gemini API Key
-llm = ChatGoogleGenerativeAI(model="gemini-pro", google_api_key="AIzaSyDvbke4TODM1nOMbkZAXXhOVGQeECSsATU", temperature=0)
+llm = ChatGoogleGenerativeAI(model="gemini-pro", google_api_key="AIzaSyDvbke4TODM1nOMbkZAXXhOVGQeECSsATU", verbose= False)
 
 # Define State
 class AgentState:
@@ -45,6 +45,7 @@ def classify_input(state: AgentState) -> AgentState:
 # Step 2: Process Chat Input
 def handle_chat(state: AgentState) -> AgentState:
     # Handle date and time requests directly
+    llm.temperature=0.7
     if "date" in state.user_input.lower():
         state.response = f"Today's date is {datetime.now().strftime('%Y-%m-%d')}."
         print(state.response)
@@ -67,6 +68,7 @@ def handle_chat(state: AgentState) -> AgentState:
 
 # Step 3: Interpret Command Input
 def interpret_command(state: AgentState) -> AgentState:
+    llm.temperature=0
     prompt_template = PromptTemplate(
         input_variables=["input"],
         template="""
@@ -177,10 +179,10 @@ def execute_command(state: AgentState) -> AgentState:
                 print(error_msg)
                 all_results.append(error_msg)
             else:
-                output = result
+                output = result.stdout
                 print(f"Sub-Command Output:\n{output}")
                 all_results.append(output)
-        
+            state.execution_result = all_results
         # Combine all results into a single output
         # state.execution_result = "\n".join(all_results)
     except subprocess.CalledProcessError as e:
@@ -197,10 +199,10 @@ def execute_command(state: AgentState) -> AgentState:
 def generate_command_response(state: AgentState) -> AgentState:
     prompt_template = PromptTemplate(
         input_variables=["command", "result"],
-        template="Explain the following command and its output:\nCommand: {command}\nOutput: {result}"
+        template="Explain the output in complete layman terms, and be straight to the point. : Output: {result}"
     )
     chain = prompt_template | llm
-    result = chain.invoke({"command": state.shell_command, "result": state.execution_result})
+    result = chain.invoke({"result": state.execution_result})
     state.response = result.content.strip()
     # print(f"Explanation: {state.response}")
     return state
@@ -240,6 +242,7 @@ def main():
             print("Goodbye!")
             break
         state = AgentState(user_input=user_input)
+        print("THIS STATE",state.execution_result)
         result = app.invoke(state)
         print("AI Agent:", result.response)
 
